@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-scroll";
 import { Menu, X } from "lucide-react";
 import { personalInfo } from "@/lib/data";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navLinks = [
   { name: "About", to: "about" },
@@ -53,15 +54,19 @@ export default function Navbar() {
               <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
+          <ThemeToggle />
         </nav>
 
         {/* Mobile menu button */}
-        <button
-          className="md:hidden text-foreground hover:text-primary transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-4 md:hidden">
+          <ThemeToggle />
+          <button
+            className="text-foreground hover:text-primary transition-colors"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav */}

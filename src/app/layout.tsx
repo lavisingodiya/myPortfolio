@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -42,11 +43,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${manrope.variable} ${jetbrainsMono.variable} dark h-full antialiased selection:bg-primary/20 selection:text-primary font-body`}
+      className={`${spaceGrotesk.variable} ${manrope.variable} ${jetbrainsMono.variable} antialiased selection:bg-primary/20 selection:text-primary font-body`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
-        <Analytics />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   );
