@@ -2,159 +2,111 @@
 
 import { motion } from "framer-motion";
 import { ExternalLink, TrendingUp, Link2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { projects } from "@/lib/data";
 
 export default function Projects() {
   return (
-    <section id="projects" className="section-padding relative">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+    <section id="projects" className="section-padding bg-background relative z-10">
       <div className="section-container">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-sm font-mono text-primary mb-2 text-center"
-        >
-          # projects
-        </motion.p>
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-4xl font-bold text-center mb-3"
-        >
-          Featured <span className="gradient-text">Work</span>
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-muted-foreground text-center mb-12 max-w-xl mx-auto"
-        >
-          Production systems with measurable business impact — built to scale, designed to last.
-        </motion.p>
+        <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-6 border-b border-border pb-8">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-5xl md:text-6xl font-sans font-bold text-foreground tracking-tight"
+          >
+            Architectural <br />
+            <span className="text-primary italic font-light tracking-normal">Deployments</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-muted-foreground font-mono text-sm max-w-sm"
+          >
+            // Production systems with measurable business impact — built to scale, designed for high availability.
+          </motion.p>
+        </div>
 
-        {/* Featured (first 2) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {projects.slice(0, 2).map((project, idx) => (
+        <div className="space-y-12">
+          {projects.map((project, idx) => (
             <motion.div
               key={project.title}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.12 }}
-              whileHover={{ y: -4 }}
-              className="glass-card rounded-2xl p-6 flex flex-col gap-4 hover:glow-border transition-all duration-300 group"
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="group flex flex-col lg:flex-row gap-8 lg:gap-16 p-8 lg:p-12 bg-[#090e19] hover:bg-card transition-colors duration-500 border border-border/50 hover:border-primary/30"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between">
+              {/* Left Column: Details */}
+              <div className="flex-1 space-y-8">
                 <div>
-                  <div className="text-xs font-mono text-primary mb-1">Featured Project</div>
-                  <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  <div className="text-xs font-mono text-primary mb-4 tracking-widest uppercase">
+                    {project.featured ? "// Featured_Architecture" : "// Standard_Deployment"}
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-bold font-sans text-foreground group-hover:text-primary transition-colors">
                     {project.title}
                   </h3>
                 </div>
-                <div className="flex gap-2 shrink-0">
+
+                <p className="text-lg text-muted-foreground leading-relaxed font-body">
+                  {project.description}
+                </p>
+
+                {/* Tech Stack Chips */}
+                <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
+                  {project.tech.map((t) => (
+                    <span 
+                      key={t} 
+                      className="px-3 py-1.5 text-xs font-mono text-foreground bg-secondary border-l-2 border-primary"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Impact & Links */}
+              <div className="w-full lg:w-72 shrink-0 flex flex-col justify-between gap-8 bg-secondary p-8 border-l border-primary/20 group-hover:border-primary/50 transition-colors duration-500">
+                <div className="space-y-4">
+                  <h4 className="text-xs font-mono text-muted-foreground uppercase tracking-widest">// Impact_Metrics</h4>
+                  <ul className="space-y-3">
+                    {project.impact.map((metric) => (
+                      <li
+                        key={metric}
+                        className="flex items-start gap-3 text-sm font-mono text-primary"
+                      >
+                        <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span className="leading-tight">{metric}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="flex gap-4">
                   <a
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                    aria-label="GitHub"
+                    className="flex items-center gap-2 text-sm font-mono text-foreground hover:text-primary transition-colors hover:shadow-[0_0_15px_rgba(0,229,255,0.2)] bg-background px-4 py-2 border border-border"
                   >
                     <Link2 className="w-4 h-4" />
+                    Source
                   </a>
-                  <a
-                    href={project.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                    aria-label="Live"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  {project.live !== "#" && (
+                    <a
+                      href={project.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm font-mono text-foreground hover:text-primary transition-colors hover:shadow-[0_0_15px_rgba(0,229,255,0.2)] bg-background px-4 py-2 border border-border"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Live
+                    </a>
+                  )}
                 </div>
-              </div>
-
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {project.description}
-              </p>
-
-              {/* Impact metrics */}
-              <div className="flex flex-wrap gap-2">
-                {project.impact.map((metric) => (
-                  <div
-                    key={metric}
-                    className="flex items-center gap-1.5 text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded"
-                  >
-                    <TrendingUp className="w-3 h-3" />
-                    {metric}
-                  </div>
-                ))}
-              </div>
-
-              {/* Tech stack */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                {project.tech.map((t) => (
-                  <Badge key={t} variant="secondary" className="text-xs font-mono">
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Other projects (2 more) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.slice(2).map((project, idx) => (
-            <motion.div
-              key={project.title}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 + idx * 0.12 }}
-              whileHover={{ y: -4 }}
-              className="glass-card rounded-xl p-5 flex flex-col gap-3 hover:glow-border transition-all duration-300 group"
-            >
-              <div className="flex items-start justify-between">
-                <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">
-                  {project.title}
-                </h3>
-                <div className="flex gap-2 shrink-0">
-                  <a
-                    href={project.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                    aria-label="GitHub"
-                  >
-                    <Link2 className="w-4 h-4" />
-                  </a>
-                  <a
-                    href={project.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                    aria-label="Live"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                </div>
-              </div>
-
-              <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
-
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                {project.tech.map((t) => (
-                  <Badge key={t} variant="secondary" className="text-xs font-mono">
-                    {t}
-                  </Badge>
-                ))}
               </div>
             </motion.div>
           ))}
