@@ -145,13 +145,13 @@
     background-clip: text;
   }
   .glass-card {
-    background: #1b1f2b; /* surface_container */
-    border: 1px solid rgba(59, 73, 76, 0.2); /* Ghost border */
+    background: var(--card); 
+    border: 1px solid var(--border);
   }
   .glass-nav {
-    background: rgba(23, 27, 39, 0.6); /* surface_container_low at 60% */
+    background: color-mix(in srgb, var(--background) 80%, transparent); 
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(59, 73, 76, 0.2);
+    border-bottom: 1px solid var(--border);
   }
   .glow-border {
     border: 1px solid #00e5ff;

@@ -38,7 +38,7 @@ export default function Projects() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="group flex flex-col lg:flex-row gap-8 lg:gap-16 p-8 lg:p-12 bg-[#090e19] hover:bg-card transition-colors duration-500 border border-border/50 hover:border-primary/30"
+              className="group flex flex-col lg:flex-row gap-8 lg:gap-16 p-8 lg:p-12 bg-background hover:bg-card transition-colors duration-500 border border-border/50 hover:border-primary/30"
             >
               {/* Left Column: Details */}
               <div className="flex-1 space-y-8">
