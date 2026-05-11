@@ -24,6 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lavisingodiya.tech"),
   title: "Lavi Singodiya – Cloud/DevOps Engineer",
   description:
     "Cloud/DevOps Engineer specializing in AWS, Kubernetes, Terraform, and DevOps. Building resilient, scalable infrastructure for modern applications.",
@@ -33,6 +34,22 @@ export const metadata: Metadata = {
     description:
       "Building resilient, scalable infrastructure that powers modern applications.",
     type: "website",
+    url: "https://lavisingodiya.tech",
+    siteName: "Lavi Singodiya",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Lavi Singodiya - Cloud/DevOps Engineer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lavi Singodiya – Cloud/DevOps Engineer",
+    description: "Building resilient, scalable infrastructure that powers modern applications.",
+    images: ["/og-image.png"],
   },
 };
 
