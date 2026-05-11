@@ -1,6 +1,6 @@
 export const personalInfo = {
   name: "Lavi Singodiya",
-  role: "Senior Cloud Engineer",
+  role: "Cloud/DevOps Engineer",
   tagline: "Designing and operating enterprise-grade AWS and Azure infrastructure. Specializing in Kubernetes, GitOps, and cloud security.",
   email: "lavisaini322@gmail.com",
   phone: "+91 8769045359",
@@ -100,7 +100,7 @@ export const projects = [
 export const experience = [
   {
     company: "Raptbot Technologies Pvt. Ltd.",
-    role: "Senior Cloud Engineer",
+    role: "Cloud/DevOps Engineer",
     period: "Sep 2025 – Present",
     location: "India",
     highlights: [

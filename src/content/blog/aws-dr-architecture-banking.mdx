@@ -1,0 +1,80 @@
+---
+title: "Banking App DC-DR Architecture on AWS: A Deep Dive"
+date: "2026-04-15"
+description: "How I designed and deployed a production-grade High Availability and Disaster Recovery architecture for banking workloads on AWS, achieving near-zero downtime failover."
+tags: ["AWS", "DR", "Architecture", "High Availability", "Cloud"]
+featured: true
+---
+
+When a bank's core application goes down, even for seconds, the cost is enormous — financial, reputational, and regulatory. This is the challenge I tackled at BM Infotrade: design a **DC-DR architecture on AWS** that would guarantee near-zero downtime failover for banking workloads.
+
+## The Problem Statement
+
+The client's existing infrastructure was a single-region, single-AZ deployment. Any EC2 failure, AZ outage, or regional disruption would bring the entire system down. The requirements:
+
+- **RTO (Recovery Time Objective):** < 5 minutes
+- **RPO (Recovery Point Objective):** < 1 minute  
+- **Availability SLA:** 99.9% uptime
+- **Regulatory compliance:** Data residency and audit trails
+
+## Architecture Overview
+
+The solution used a **Active-Passive** cross-region setup with automated failover:
+
+```
+Primary Region (ap-south-1)          DR Region (ap-southeast-1)
+┌──────────────────────────┐         ┌──────────────────────────┐
+│  Route 53 Health Checks  │◄───────►│  Route 53 Failover       │
+│  ALB → Auto Scaling Group│         │  ALB → Standby ASG       │
+│  RDS Multi-AZ (Primary)  │──sync──►│  RDS Read Replica (DR)   │
+│  VPC (10.0.0.0/16)       │◄peering►│  VPC (10.1.0.0/16)       │
+└──────────────────────────┘         └──────────────────────────┘
+```
+
+## Key Components
+
+### 1. Route 53 with Health Checks
+
+Route 53 was configured with **failover routing** policy — health checks poll the primary ALB every 10 seconds. If 3 consecutive checks fail, DNS automatically flips to the DR endpoint.
+
+```
+Failover trigger time: ~30 seconds (3 × 10s checks)
+DNS TTL: 30 seconds
+```
+
+### 2. Cross-Region VPC Peering
+
+Both VPCs are connected via **VPC Peering** with strict NACLs. Only specific ports (3306 for RDS replication, 443 for app traffic) are permitted across the peering connection. This kept the blast radius small while enabling replication.
+
+### 3. RDS Multi-AZ with Read Replica
+
+- **Primary:** RDS MySQL Multi-AZ in `ap-south-1` (automatic failover within region, ~60s)
+- **DR Replica:** Cross-region Read Replica in `ap-southeast-1`
+- **Promotion script:** AWS Lambda + SSM Run Command promotes the read replica to standalone in < 2 minutes
+
+### 4. Auto Scaling & Launch Templates
+
+Both regions use **Launch Templates** with versioned AMIs. The DR ASG runs at minimum capacity (2 instances) during normal operations, scaling to production capacity automatically on failover via a CloudWatch alarm tied to Route 53 health check state.
+
+### 5. AWS Systems Manager for Runbooks
+
+All failover operations are documented as **SSM Automation runbooks** — reducing human error during high-stress incidents. The entire failover can be triggered with a single SSM command.
+
+## Lessons Learned
+
+**Test your DR. Regularly.** We ran quarterly failover drills. The first drill exposed a missing IAM permission that would have blocked the Lambda promotion script. Without testing, you don't have DR — you have a hope.
+
+**Monitor replication lag aggressively.** Cross-region RDS replication lag was our biggest risk. We set CloudWatch alarms at 30s lag to page on-call before it became a problem.
+
+**DNS TTLs matter.** We initially had 300s TTLs. Reducing to 30s shaved ~4 minutes off our observed failover time in drills.
+
+## Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| RTO | Hours (manual) | < 5 minutes |
+| RPO | Unpredictable | < 1 minute |
+| Availability | ~99.5% | 99.9%+ |
+| Failover trigger | Manual | Automated |
+
+This architecture is now the baseline template for all banking clients at the organization.

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-scroll";
+import NextLink from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { personalInfo } from "@/lib/data";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -10,6 +12,7 @@ const navLinks = [
   { name: "About", to: "about" },
   { name: "Skills", to: "skills" },
   { name: "Projects", to: "projects" },
+  { name: "Blog", to: "/blog", isPage: true },
   { name: "Experience", to: "experience" },
   { name: "Contact", to: "contact" },
 ];
@@ -17,6 +20,8 @@ const navLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -31,29 +36,63 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <Link
-          to="hero"
-          smooth={true}
-          className="text-xl font-bold font-sans tracking-tighter cursor-pointer text-foreground hover:text-primary transition-colors flex items-center gap-2"
-        >
-          <span className="w-2 h-2 bg-primary rounded-none shadow-[0_0_10px_#00e5ff]" />
-          {personalInfo.name.toUpperCase()}
-        </Link>
+        {isHome ? (
+          <Link
+            to="hero"
+            smooth={true}
+            className="text-xl font-bold font-sans tracking-tighter cursor-pointer text-foreground hover:text-primary transition-colors flex items-center gap-2"
+          >
+            <span className="w-2 h-2 bg-primary rounded-none shadow-[0_0_10px_#00e5ff]" />
+            {personalInfo.name.toUpperCase()}
+          </Link>
+        ) : (
+          <NextLink
+            href="/"
+            className="text-xl font-bold font-sans tracking-tighter cursor-pointer text-foreground hover:text-primary transition-colors flex items-center gap-2"
+          >
+            <span className="w-2 h-2 bg-primary rounded-none shadow-[0_0_10px_#00e5ff]" />
+            {personalInfo.name.toUpperCase()}
+          </NextLink>
+        )}
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex gap-8 items-center font-mono text-sm uppercase tracking-widest">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.to}
-              smooth={true}
-              offset={-80}
-              className="text-muted-foreground hover:text-primary cursor-pointer transition-colors relative group"
-            >
-              {link.name}
-              <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            if (link.isPage) {
+              return (
+                <NextLink
+                  key={link.name}
+                  href={link.to}
+                  className="text-muted-foreground hover:text-primary cursor-pointer transition-colors relative group"
+                >
+                  {link.name}
+                  <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                </NextLink>
+              );
+            }
+
+            return isHome ? (
+              <Link
+                key={link.name}
+                to={link.to}
+                smooth={true}
+                offset={-80}
+                className="text-muted-foreground hover:text-primary cursor-pointer transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+              </Link>
+            ) : (
+              <NextLink
+                key={link.name}
+                href={`/#${link.to}`}
+                className="text-muted-foreground hover:text-primary cursor-pointer transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+              </NextLink>
+            );
+          })}
           <ThemeToggle />
         </nav>
 
@@ -72,18 +111,42 @@ export default function Navbar() {
       {/* Mobile Nav */}
       {isOpen && (
         <div className="absolute top-full left-0 w-full glass-nav flex flex-col items-center py-6 gap-6 md:hidden border-t border-border">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.to}
-              smooth={true}
-              offset={-80}
-              onClick={() => setIsOpen(false)}
-              className="text-muted-foreground hover:text-primary font-mono text-sm uppercase tracking-widest cursor-pointer transition-colors"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            if (link.isPage) {
+              return (
+                <NextLink
+                  key={link.name}
+                  href={link.to}
+                  onClick={() => setIsOpen(false)}
+                  className="text-muted-foreground hover:text-primary font-mono text-sm uppercase tracking-widest cursor-pointer transition-colors"
+                >
+                  {link.name}
+                </NextLink>
+              );
+            }
+
+            return isHome ? (
+              <Link
+                key={link.name}
+                to={link.to}
+                smooth={true}
+                offset={-80}
+                onClick={() => setIsOpen(false)}
+                className="text-muted-foreground hover:text-primary font-mono text-sm uppercase tracking-widest cursor-pointer transition-colors"
+              >
+                {link.name}
+              </Link>
+            ) : (
+              <NextLink
+                key={link.name}
+                href={`/#${link.to}`}
+                onClick={() => setIsOpen(false)}
+                className="text-muted-foreground hover:text-primary font-mono text-sm uppercase tracking-widest cursor-pointer transition-colors"
+              >
+                {link.name}
+              </NextLink>
+            );
+          })}
         </div>
       )}
     </header>

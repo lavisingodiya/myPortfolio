@@ -24,12 +24,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lavi Singodiya – Senior Cloud Engineer",
+  title: "Lavi Singodiya – Cloud/DevOps Engineer",
   description:
-    "Senior Cloud Engineer specializing in AWS, Kubernetes, Terraform, and DevOps. Building resilient, scalable infrastructure for modern applications.",
+    "Cloud/DevOps Engineer specializing in AWS, Kubernetes, Terraform, and DevOps. Building resilient, scalable infrastructure for modern applications.",
   keywords: ["Cloud Engineer", "AWS", "Kubernetes", "Terraform", "DevOps", "Infrastructure"],
   openGraph: {
-    title: "Lavi Singodiya – Senior Cloud Engineer",
+    title: "Lavi Singodiya – Cloud/DevOps Engineer",
     description:
       "Building resilient, scalable infrastructure that powers modern applications.",
     type: "website",

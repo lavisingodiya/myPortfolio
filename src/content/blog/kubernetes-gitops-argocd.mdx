@@ -1,0 +1,128 @@
+---
+title: "Kubernetes GitOps with Argo CD: From Chaos to Confidence"
+date: "2026-03-20"
+description: "How we replaced manual kubectl apply deployments with a GitOps workflow using Argo CD, slashing deployment time by ~60% and eliminating configuration drift across our Kubernetes clusters."
+tags: ["Kubernetes", "GitOps", "Argo CD", "DevOps", "EKS"]
+featured: true
+---
+
+Before GitOps, our deployment process looked something like this: a developer finishes a feature, opens a Slack message to the ops team, someone SSHs into the cluster, runs a `kubectl apply`, and prays it works. If something broke, good luck figuring out what changed and when.
+
+This is the story of how we fixed that with **Argo CD and GitOps**.
+
+## What Is GitOps?
+
+GitOps is an operational pattern where **Git is the single source of truth** for your cluster's desired state. Every configuration change — deployments, services, configmaps, RBAC — is a pull request. The cluster continuously reconciles itself against what's in Git.
+
+The two core principles:
+1. **Declarative:** Describe *what* you want, not *how* to get there.
+2. **Continuously reconciled:** The cluster self-heals if it drifts from the desired state.
+
+## Why Argo CD?
+
+We evaluated FluxCD and Argo CD. Argo won for three reasons:
+- **UI:** Argo has an excellent web dashboard that makes drift detection visual and obvious.
+- **ApplicationSets:** Generating applications for multiple clusters/environments from a single template.
+- **Rollback story:** One-click rollbacks to any previous Git commit directly from the UI.
+
+## Repository Structure
+
+We use a **monorepo with environment overlays** pattern:
+
+```
+gitops-repo/
+├── apps/
+│   ├── api-service/
+│   │   ├── base/
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── kustomization.yaml
+│   │   └── overlays/
+│   │       ├── staging/
+│   │       │   └── kustomization.yaml   # patch image tag, replicas
+│   │       └── production/
+│   │           └── kustomization.yaml   # patch image tag, resources
+├── infrastructure/
+│   ├── cert-manager/
+│   ├── external-dns/
+│   └── ingress-nginx/
+└── argocd/
+    └── applications/
+        ├── api-service-staging.yaml
+        └── api-service-production.yaml
+```
+
+## The CI/CD Flow
+
+```
+Developer pushes code
+       │
+       ▼
+GitHub Actions CI
+  - Build Docker image
+  - Run Trivy security scan
+  - Run SonarQube analysis
+  - Push image to ECR with SHA tag
+  - Update image tag in gitops-repo overlay
+       │
+       ▼
+Argo CD detects git change
+  - Computes diff (desired vs actual)
+  - Syncs cluster (or waits for manual approval in prod)
+       │
+       ▼
+Cluster updated ✓
+```
+
+The critical part: **the CI pipeline never touches kubectl**. It only updates a YAML file in the GitOps repo. Argo CD does the rest.
+
+## Handling Secrets
+
+Secrets in Git is a non-starter. We use **AWS Secrets Manager + External Secrets Operator (ESO)**:
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: db-credentials
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: db-credentials   # creates a K8s secret
+  data:
+    - secretKey: DB_PASSWORD
+      remoteRef:
+        key: prod/api-service/db
+        property: password
+```
+
+Secrets live in AWS Secrets Manager. ESO syncs them into K8s secrets on a schedule. Rotation is automatic. Git never sees a plaintext secret.
+
+## Drift Detection in Practice
+
+One evening, Argo CD showed one of our production deployments in a **"OutOfSync"** state — yellow warning in the dashboard. Investigating, we found someone had manually `kubectl set image`'d a container to test a fix for a production issue (we've all been there).
+
+Argo detected the drift within 3 minutes. We reviewed the diff, created a proper PR with the fix, and merged it. The cluster self-healed.
+
+Without GitOps, that manual change would have lived invisibly until the next deployment overwrote it — or caused an incident.
+
+## Results After 6 Months
+
+| Metric | Before GitOps | After GitOps |
+|--------|---------------|--------------|
+| Deployment time | ~25 minutes | ~8 minutes |
+| Manual kubectl runs | Daily | Zero |
+| Configuration drift incidents | ~3/month | 0 |
+| Rollback time | 30+ minutes | < 2 minutes |
+| Audit trail | Slack messages | Full Git history |
+
+The **~60% deployment time reduction** is real — but the bigger win is confidence. Every change is reviewed, traceable, and reversible.
+
+## Closing Thoughts
+
+GitOps doesn't eliminate complexity — it makes complexity manageable. If you're running Kubernetes and still doing `kubectl apply` by hand, GitOps is the single highest-leverage change you can make to your operations.
+
+Start small: one application, one cluster, one environment. Let Argo CD manage it for two weeks. You won't go back.

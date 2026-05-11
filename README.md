@@ -1,4 +1,4 @@
-# Lavi Singodiya - Senior Cloud Engineer Portfolio
+# Lavi Singodiya - Cloud/DevOps Engineer Portfolio
 
 A production-grade, highly responsive, and architecturally inspired portfolio built to showcase enterprise cloud engineering experience.
 
@@ -89,5 +89,5 @@ myPortfolio/
 ## 📬 Contact
 
 **Lavi Singodiya**  
-Senior Cloud Engineer  
+Cloud/DevOps Engineer  
 [lavisaini322@gmail.com](mailto:lavisaini322@gmail.com) | [GitHub](https://github.com/lavisingodiya) | [LinkedIn](https://linkedin.com/in/lavisingodiya)

@@ -28,7 +28,7 @@ export default function About() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                I am a Senior Cloud Engineer with over <span className="text-foreground font-medium">2+ years of enterprise experience</span> designing and operating mission-critical infrastructure across AWS and Microsoft Azure. I specialize in Kubernetes orchestration, GitOps delivery, and cloud security hardening.
+                I am a Cloud/DevOps Engineer with over <span className="text-foreground font-medium">2+ years of enterprise experience</span> designing and operating mission-critical infrastructure across AWS and Microsoft Azure. I specialize in Kubernetes orchestration, GitOps delivery, and cloud security hardening.
               </motion.p>
               <motion.p
                 initial={{ opacity: 0, x: -20 }}
@@ -82,7 +82,7 @@ export default function About() {
               className="bg-secondary p-8 border-l border-primary"
             >
               <h3 className="text-sm font-mono text-primary mb-6 uppercase tracking-widest">// Credentials</h3>
-              
+
               <div className="space-y-6">
                 <div>
                   <h4 className="text-foreground font-bold mb-1">{education[0].degree}</h4>
