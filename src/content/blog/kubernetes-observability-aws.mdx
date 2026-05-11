@@ -1,0 +1,304 @@
+---
+title: "Building a Production-Grade Kubernetes Observability Stack on AWS"
+date: "2026-05-11"
+description: "How to design a Kubernetes observability stack on AWS that reduces alert noise, shortens MTTR, and gives engineers the right signal during production incidents."
+tags: ["Kubernetes", "Observability", "AWS", "EKS", "SRE", "DevOps"]
+featured: true
+---
+
+When a Kubernetes incident starts, the first problem is usually not the fix. It is visibility. Logs are fragmented, metrics are noisy, dashboards are stale, and everyone asks the same question: **what actually changed?**
+
+That is the gap this architecture closes.
+
+This article is a practical blueprint for building a production observability stack on AWS for Kubernetes workloads. The goal is not to collect everything. The goal is to collect the **right** data, route it to the **right** place, and make it useful during an incident.
+
+## What Most Teams Get Wrong
+
+Most observability stacks fail for the same reasons:
+
+- too many alerts, not enough signal
+- metrics with no ownership
+- logs with no correlation IDs
+- dashboards built for demos, not outages
+- no separation between app, cluster, and infrastructure telemetry
+- storage and ingestion costs that grow faster than the business
+
+A good observability stack should answer three questions quickly:
+
+1. **Is the platform healthy?**
+2. **Is the application healthy?**
+3. **What changed before the incident started?**
+
+If the stack cannot answer those in under a minute, it is incomplete.
+
+## Reference Architecture
+
+```
+                   ┌────────────────────────────────────────┐
+                   │                AWS EKS                 │
+                   │                                        │
+App Pods ───────►   │  App metrics  ─────► Prometheus       │
+App Logs  ───────►   │  App logs     ─────► Fluent Bit      │
+Traces    ───────►   │  Traces       ─────► OpenTelemetry   │
+                   │                                        │
+                   │  Cluster metrics ───► CloudWatch      │
+                   │  Searchable logs ───► ELK / OpenSearch │
+                   │  Dashboards      ───► Grafana         │
+                   │  Alerts           ───► Alertmanager → Opsgenie
+                   └────────────────────────────────────────┘
+```
+
+The stack is intentionally layered:
+
+- **Prometheus** for Kubernetes and application metrics
+- **Grafana** for dashboards and correlation
+- **Fluent Bit** for log collection
+- **ELK/OpenSearch** for searchable logs and root-cause analysis
+- **CloudWatch** for AWS-native infrastructure signals
+- **Opsgenie** for paging and escalation
+- **OpenTelemetry** where traces are required
+
+That split matters. One tool should not do everything.
+
+## Metrics: Start with the Questions, Not the Tool
+
+Before creating dashboards, define the questions you need answered during an incident.
+
+For example:
+
+- Is the pod restarting because of memory pressure?
+- Is latency rising because of a downstream dependency?
+- Is the HPA scaling fast enough?
+- Are nodes running out of CPU or IPs?
+- Did deployment traffic drop right after a rollout?
+
+Once the questions are clear, the metrics become obvious.
+
+### Core Kubernetes Metrics
+
+Track at minimum:
+
+- pod restarts
+- container CPU and memory usage
+- node CPU, memory, disk, and network saturation
+- deployment replica drift
+- HPA scale decisions
+- request rate, error rate, latency, saturation
+
+### Application Metrics
+
+These are more important than platform metrics during most incidents:
+
+- p50 / p95 / p99 latency
+- 4xx / 5xx rates
+- queue depth
+- downstream dependency latency
+- DB connection pool usage
+- retry counts
+- circuit breaker states
+
+### Example Prometheus Scrape Pattern
+
+```yaml
+scrape_configs:
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+```
+
+Keep the scrape model simple. The more complicated the collection layer becomes, the harder it is to trust during an incident.
+
+## Logging: Make Every Log Line Useful
+
+Logs are only valuable when they can be traced back to a request, deployment, or dependency failure.
+
+That means every application log should include:
+
+- timestamp
+- service name
+- environment
+- request ID
+- correlation ID
+- severity
+- error context
+
+Without that, logs become expensive noise.
+
+### Fluent Bit for Collection
+
+A lightweight DaemonSet works well on EKS because it is simple to operate and scales with the cluster.
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+spec:
+  template:
+    spec:
+      containers:
+        - name: fluent-bit
+          image: fluent/fluent-bit:2.2
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+```
+
+The important design choice is the destination:
+
+- **ELK/OpenSearch** for investigation and search
+- **S3 archive** for retention and audit needs
+- **CloudWatch** for AWS-native alerting and quick access
+
+Do not keep all logs in one place just because it is convenient. Searchability and retention have different purposes.
+
+## Alerting: Reduce Noise Before It Reaches Humans
+
+Alert fatigue destroys observability.
+
+If engineers get paged for every CPU spike, they stop trusting alerts. Once trust is gone, the system fails operationally even if the infrastructure is healthy.
+
+The rules are simple:
+
+- alert on user impact, not raw symptom volume
+- page only on actionable issues
+- send low-priority warnings to chat
+- group related alerts by service or domain
+- suppress duplicates during known incidents
+
+### A Practical Paging Model
+
+- **Critical:** page immediately through Opsgenie
+- **High:** notify chat and create a ticket
+- **Medium:** dashboard only
+- **Low:** trend tracking and capacity planning
+
+### Alert Example
+
+```yaml
+groups:
+  - name: app-alerts
+    rules:
+      - alert: High5xxRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx rate is above threshold"
+```
+
+The `for` window matters. Without it, you will page on temporary spikes that self-correct.
+
+## Dashboards: Build for Incident Response
+
+A good dashboard should answer one question per row.
+
+A bad dashboard tries to show everything at once.
+
+The most useful dashboards are usually:
+
+1. **Service overview** — traffic, latency, errors, saturation
+2. **Cluster overview** — node pressure, pod health, scheduling issues
+3. **Deployment view** — rollout state, replica drift, recent changes
+4. **Dependency view** — DB, cache, queue, and third-party health
+5. **Incident view** — everything needed for active triage
+
+During an outage, the dashboard should show the path from symptom to cause without requiring ten clicks.
+
+## Tracing: Use It for the Right Workloads
+
+Distributed tracing is not mandatory for every service, but it becomes extremely valuable when requests cross multiple systems.
+
+Use traces when you need to understand:
+
+- latency between services
+- where a request is failing
+- how much time is spent in downstream dependencies
+- the effect of retries and fan-out patterns
+
+If your stack already uses OpenTelemetry, keep the instrumentation consistent across services. Partial tracing often creates more confusion than clarity.
+
+## Cost Control Is Part of Observability
+
+A production observability stack can become expensive very quickly.
+
+The biggest cost drivers are usually:
+
+- log ingestion volume
+- high-cardinality metrics
+- long retention windows
+- too many dashboards and alerts
+- duplicate data sent to multiple destinations
+
+### Practical Controls
+
+- drop noisy debug logs in production
+- sample traces where appropriate
+- cap retention by data type
+- avoid dynamic labels with high cardinality
+- aggregate metrics before storage when possible
+
+If observability costs are rising faster than traffic, the system design is wrong.
+
+## What Breaks in Real Production
+
+The hard parts are not the tools. The hard parts are the edge cases.
+
+Common failure modes include:
+
+- missing logs during node termination
+- alert storms after a bad deployment
+- Prometheus memory growth from high-cardinality labels
+- dashboards showing stale data during control plane issues
+- false positives from readiness probe failures
+- log pipelines backing up under burst traffic
+
+The fix is usually a combination of good defaults, tight naming conventions, and operational discipline.
+
+## The Operating Model
+
+Observability only works when it is owned.
+
+A healthy model looks like this:
+
+- platform team owns collectors, storage, and alert routing
+- application teams own service dashboards and service-level alerts
+- incident owners review every major alert after the incident
+- monthly reviews remove noisy alerts and stale dashboards
+
+That review loop is where the stack gets better over time.
+
+## Results
+
+A stack like this typically changes the operational profile in measurable ways:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Mean time to detect | Slow and inconsistent | Faster with clear alert routing |
+| Mean time to recover | Long triage cycles | Shorter with correlated signals |
+| Alert noise | High | Controlled |
+| Incident confidence | Low | High |
+| Log search time | Minutes to hours | Seconds to minutes |
+
+The biggest win is not the tooling. It is the reduction in uncertainty.
+
+## Closing Thoughts
+
+Observability is not a dashboard project. It is an operational system.
+
+If the stack is designed well, engineers spend less time searching and more time fixing. That is the difference between collecting data and running a reliable platform.
+
+Start with the questions, instrument the critical paths, and keep the signal high. Everything else is noise.

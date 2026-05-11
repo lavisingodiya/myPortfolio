@@ -6,6 +6,7 @@ import { getAllSlugs, getPostBySlug } from "@/lib/blog";
 import { useMDXComponents } from "@/components/blog/MdxComponents";
 import TagBadge from "@/components/blog/TagBadge";
 import { compileMDX } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -49,7 +50,12 @@ export default async function BlogPostPage({ params }: Params) {
   const { content } = await compileMDX({
     source: post.content,
     components: mdxComponents,
-    options: { parseFrontmatter: false },
+    options: {
+      parseFrontmatter: false,
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+      },
+    },
   });
 
   const formattedDate = new Date(post.date).toLocaleDateString("en-US", {
