@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   description:
     "Cloud/DevOps Engineer specializing in AWS, Kubernetes, Terraform, and DevOps. Building resilient, scalable infrastructure for modern applications.",
   keywords: ["Cloud Engineer", "AWS", "Kubernetes", "Terraform", "DevOps", "Infrastructure"],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Lavi Singodiya – Cloud/DevOps Engineer",
     description:

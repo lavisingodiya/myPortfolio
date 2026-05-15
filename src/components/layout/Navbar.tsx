@@ -39,6 +39,7 @@ export default function Navbar() {
         {isHome ? (
           <Link
             to="hero"
+            href="#hero"
             smooth={true}
             className="text-xl font-bold font-sans tracking-tighter cursor-pointer text-foreground hover:text-primary transition-colors flex items-center gap-2"
           >
@@ -75,6 +76,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.to}
+                href={`#${link.to}`}
                 smooth={true}
                 offset={-80}
                 className="text-muted-foreground hover:text-primary cursor-pointer transition-colors relative group"
@@ -129,6 +131,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.to}
+                href={`#${link.to}`}
                 smooth={true}
                 offset={-80}
                 onClick={() => setIsOpen(false)}

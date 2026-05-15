@@ -1,0 +1,20 @@
+# Lavi Singodiya - Cloud/DevOps Engineer Portfolio
+
+## Overview
+Lavi Singodiya is a Cloud/DevOps Engineer specializing in AWS, Kubernetes, Terraform, and DevOps. This is the personal portfolio website showcasing skills, projects, and work experience. 
+
+## Key Technologies
+- AWS
+- Kubernetes
+- Terraform
+- DevOps CI/CD Pipelines
+- Infrastructure as Code (IaC)
+
+## Navigation
+- / : Home page with About, Skills, Projects, Experience, and Contact sections.
+- /blog : Technical blog exploring Cloud & DevOps topics.
+
+## Contact
+- GitHub: https://github.com/lavisingodiya
+- LinkedIn: https://www.linkedin.com/in/lavisingodiya
+- Email: Contact via the form on the website.
